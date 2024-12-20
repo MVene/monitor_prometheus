@@ -14,6 +14,7 @@ void send_metrics_as_json()
     double memory_usage = get_memory_usage();
     struct DiskStats disk_stats = get_disk_io();
     struct NetStats network_stats = get_network_stats();
+    struct FragStats frag_stats = get_fragmentation_stats();
     int running_processes = get_process_count();
     unsigned long long context_switches = get_context_switches();
 
@@ -32,6 +33,10 @@ void send_metrics_as_json()
                                 : 0.0);
     cJSON_AddNumberToObject(root, "running_processes_count", (double)running_processes);
     cJSON_AddNumberToObject(root, "context_switches_total", (double)context_switches);
+    cJSON_AddNumberToObject(root, "fragmentation_percentage", frag_stats.fragmentation);
+    cJSON_AddNumberToObject(root, "policy_counter_first", (double)frag_stats.policy_counter_first);
+    cJSON_AddNumberToObject(root, "policy_counter_best", (double)frag_stats.policy_counter_best);
+    cJSON_AddNumberToObject(root, "policy_counter_worst", (double)frag_stats.policy_counter_worst);
 
     // Convertir el objeto JSON a string y enviarlo al pipe
     char* json_data = cJSON_Print(root);

@@ -20,6 +20,11 @@ static prom_gauge_t* network_reception_metric;
 static prom_gauge_t* network_packet_tx_metric;
 static prom_gauge_t* network_packet_rx_metric;
 
+static prom_gauge_t* fragmentation_metric;
+static prom_gauge_t* policy_counter_first;
+static prom_gauge_t* policy_counter_best;
+static prom_gauge_t* policy_counter_worst;
+
 static prom_gauge_t* process_count_metric;
 static prom_gauge_t* context_switches_metric;
 
@@ -111,6 +116,19 @@ void update_context_switches_gauge()
     }
 }
 
+/** LAB 3 */
+void update_fragmentation_gauge()
+{
+    struct FragStats frag = get_fragmentation_stats();
+
+    pthread_mutex_lock(&lock);
+    prom_gauge_set(fragmentation_metric, frag.fragmentation, NULL);
+    prom_gauge_set(policy_counter_first, (double)frag.policy_counter_first, NULL);
+    prom_gauge_set(policy_counter_best, (double)frag.policy_counter_best, NULL);
+    prom_gauge_set(policy_counter_worst, (double)frag.policy_counter_worst, NULL);
+    pthread_mutex_unlock(&lock);
+}
+
 void* expose_metrics(void* arg)
 {
     (void)arg; // Argumento no utilizado
@@ -166,6 +184,7 @@ void init_metrics()
         prom_gauge_new("disk_read", "Estadisticas de Lectura de Disco", 0, NULL));
     disk_writes_metric = prom_collector_registry_must_register_metric(
         prom_gauge_new("disk_write", "Estadisticas de Escritura de Disco", 0, NULL));
+
     network_transfers_metric = prom_collector_registry_must_register_metric(
         prom_gauge_new("network_usage_transmission", "Estadisticas de Envio de Red [en GB]", 0, NULL));
     network_reception_metric = prom_collector_registry_must_register_metric(
@@ -179,6 +198,15 @@ void init_metrics()
         prom_gauge_new("process_count", "Numero de procesos corriendo", 0, NULL));
     context_switches_metric = prom_collector_registry_must_register_metric(
         prom_gauge_new("context_switches", "Cambios de contexto", 0, NULL));
+
+    fragmentation_metric = prom_collector_registry_must_register_metric(
+        prom_gauge_new("fragmentation [%]", "Fragmentacion de memoria", 0, NULL));
+    policy_counter_first = prom_collector_registry_must_register_metric(
+        prom_gauge_new("policy_counter_first", "Contador de Politica First", 0, NULL));
+    policy_counter_best = prom_collector_registry_must_register_metric(
+        prom_gauge_new("policy_counter_best", "Contador de Politica Best", 0, NULL));
+    policy_counter_worst = prom_collector_registry_must_register_metric(
+        prom_gauge_new("policy_counter_worst", "Contador de Politica Worst", 0, NULL));
 }
 
 void destroy_mutex()

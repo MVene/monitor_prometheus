@@ -30,6 +30,16 @@ struct NetStats {
 };
 
 /**
+ * @brief Estructura para almacenar las estadísticas de fragmentación de memoria.
+ */
+struct FragStats {
+    double fragmentation;
+    int policy_counter_first;
+    int policy_counter_best;
+    int policy_counter_worst;
+};
+
+/**
  * @brief Tamaño del buffer utilizado para la recolección de métricas.
  */
 #define BUFFER_SIZE 256
@@ -64,6 +74,7 @@ int get_process_count(void);
  * @brief Obtiene los cambios de contexto del sistema.
  */
 unsigned long long get_context_switches(void);
+
 /**
  * @brief Obtiene el porcentaje de uso de CPU desde /proc/stat.
  *
@@ -73,3 +84,10 @@ unsigned long long get_context_switches(void);
  * @return Uso de CPU como porcentaje (0.0 a 100.0), o -1.0 en caso de error.
  */
 double get_cpu_usage(void);
+
+/**
+ * @brief Obtiene las estadísticas de fragmentación de memoria.
+ * 
+ * @return Estructura con las estadísticas de fragmentación de memoria.
+ */
+struct FragStats get_fragmentation_stats(void);

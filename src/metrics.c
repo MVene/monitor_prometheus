@@ -1,4 +1,5 @@
 #include "metrics.h"
+#include "memory.h"
 
 double get_memory_usage()
 {
@@ -247,4 +248,15 @@ unsigned long long get_context_switches()
     fclose(fp);
 
     return ctxt;
+}
+
+struct FragStats get_fragmentation_stats(){
+    struct FragStats frag = {0.0, 0, 0, 0};
+
+    frag.fragmentation = calculate_fragmentation();
+    frag.policy_counter_first = get_policy_counters(0);
+    frag.policy_counter_best = get_policy_counters(1);
+    frag.policy_counter_worst = get_policy_counters(2);
+
+    return frag;
 }

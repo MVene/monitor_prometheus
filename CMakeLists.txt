@@ -11,25 +11,17 @@ set(CMAKE_C_STANDARD 17)
 include_directories(include)
 
 # Añade los archivos fuente al proyecto
-set(SOURCES
-    src/metrics.c
-    src/main.c
-    src/expose_metrics.c
-    src/cjson_metrics.c
-)
+file(GLOB SOURCES "src/*.c")
 
 # Crea el ejecutable
 add_executable(metrics ${SOURCES})
-
-#Especifica las biblioteca cjson
-find_package(cJSON REQUIRED)
 
 #Busca las bibliotecas externas
 find_library(PROM_LIB prom REQUIRED)
 find_library(PROMHTTP_LIB promhttp REQUIRED)
 
 # Link libraries
-target_link_libraries(metrics PRIVATE ${PROM_LIB} ${PROMHTTP_LIB} pthread cjson::cjson)
+target_link_libraries(metrics PRIVATE ${PROM_LIB} ${PROMHTTP_LIB} pthread memory)
 
 # Establece el directorio de salida para el ejecutable
 set_target_properties(metrics PROPERTIES

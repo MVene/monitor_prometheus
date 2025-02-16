@@ -50,6 +50,11 @@ void update_process_count_gauge(void);
 void update_context_switches_gauge(void);
 
 /**
+ * @brief Actualiza el gauge de fragmentacion.
+ */
+void update_fragmentation_gauge(void);
+
+/**
  * @brief Función del hilo para exponer las métricas vía HTTP en el puerto 8000.
  * @param arg Argumento no utilizado.
  * @return NULL

@@ -63,12 +63,19 @@ void update_disk_io_gauge()
 {
     struct DiskStats io = get_disk_io();
 
-    pthread_mutex_lock(&lock);
-    prom_gauge_set(disk_reads_metric, (double)io.reads, NULL);
-    prom_gauge_set(disk_writes_metric, (double)io.writes, NULL);
-    prom_gauge_set(disk_read_time_metric, (double)io.read_time, NULL);
-    prom_gauge_set(disk_write_time_metric, (double)io.write_time, NULL);
-    pthread_mutex_unlock(&lock);
+    if ((double)io.reads >= 0 && (double)io.writes >= 0 && (double)io.read_time >= 0 && (double)io.write_time >= 0)
+    {
+        pthread_mutex_lock(&lock);
+        prom_gauge_set(disk_reads_metric, (double)io.reads, NULL);
+        prom_gauge_set(disk_writes_metric, (double)io.writes, NULL);
+        prom_gauge_set(disk_read_time_metric, (double)io.read_time, NULL);
+        prom_gauge_set(disk_write_time_metric, (double)io.write_time, NULL);
+        pthread_mutex_unlock(&lock);
+    }
+    else
+    {
+        fprintf(stderr, "Error al obtener las estadísticas de I/O de disco\n");
+    }
 }
 
 // Nueva función para actualizar la métrica de uso de red
@@ -76,12 +83,20 @@ void update_network_usage_gauge()
 {
     struct NetStats net = get_network_stats();
 
-    pthread_mutex_lock(&lock);
-    prom_gauge_set(network_transfers_metric, (double)net.bytes_transmitted, NULL);
-    prom_gauge_set(network_reception_metric, (double)net.bytes_received, NULL);
-    prom_gauge_set(network_packet_tx_metric, (double)net.packets_transmitted, NULL);
-    prom_gauge_set(network_packet_rx_metric, (double)net.packets_received, NULL);
-    pthread_mutex_unlock(&lock);
+    if ((double)net.bytes_transmitted >= 0 && (double)net.bytes_received >= 0 && (double)net.packets_transmitted >= 0 &&
+        (double)net.packets_received >= 0)
+    {
+        pthread_mutex_lock(&lock);
+        prom_gauge_set(network_transfers_metric, (double)net.bytes_transmitted, NULL);
+        prom_gauge_set(network_reception_metric, (double)net.bytes_received, NULL);
+        prom_gauge_set(network_packet_tx_metric, (double)net.packets_transmitted, NULL);
+        prom_gauge_set(network_packet_rx_metric, (double)net.packets_received, NULL);
+        pthread_mutex_unlock(&lock);
+    }
+    else
+    {
+        fprintf(stderr, "Error al obtener las estadísticas de red\n");
+    }
 }
 
 // Nueva función para actualizar el conteo de procesos
@@ -104,6 +119,7 @@ void update_process_count_gauge()
 void update_context_switches_gauge()
 {
     int ctxt_switches = (int)get_context_switches();
+
     if (ctxt_switches >= 0)
     {
         pthread_mutex_lock(&lock);
@@ -121,12 +137,20 @@ void update_fragmentation_gauge()
 {
     struct FragStats frag = get_fragmentation_stats();
 
-    pthread_mutex_lock(&lock);
-    prom_gauge_set(fragmentation_metric, frag.fragmentation, NULL);
-    prom_gauge_set(policy_counter_first, (double)frag.policy_counter_first, NULL);
-    prom_gauge_set(policy_counter_best, (double)frag.policy_counter_best, NULL);
-    prom_gauge_set(policy_counter_worst, (double)frag.policy_counter_worst, NULL);
-    pthread_mutex_unlock(&lock);
+    if (frag.fragmentation >= 0 && frag.policy_counter_first >= 0 && 
+        frag.policy_counter_best >= 0 && frag.policy_counter_worst >= 0)
+    {
+        pthread_mutex_lock(&lock);
+        prom_gauge_set(fragmentation_metric, frag.fragmentation, NULL);
+        prom_gauge_set(policy_counter_first, (double)frag.policy_counter_first, NULL);
+        prom_gauge_set(policy_counter_best, (double)frag.policy_counter_best, NULL);
+        prom_gauge_set(policy_counter_worst, (double)frag.policy_counter_worst, NULL);
+        pthread_mutex_unlock(&lock);
+    }
+    else
+    {
+        fprintf(stderr, "Error al obtener las estadísticas de fragmentación\n");
+    }
 }
 
 void* expose_metrics(void* arg)
@@ -200,7 +224,7 @@ void init_metrics()
         prom_gauge_new("context_switches", "Cambios de contexto", 0, NULL));
 
     fragmentation_metric = prom_collector_registry_must_register_metric(
-        prom_gauge_new("fragmentation [%]", "Fragmentacion de memoria", 0, NULL));
+        prom_gauge_new("fragmentation_percentage", "Fragmentacion de memoria", 0, NULL));
     policy_counter_first = prom_collector_registry_must_register_metric(
         prom_gauge_new("policy_counter_first", "Contador de Politica First", 0, NULL));
     policy_counter_best = prom_collector_registry_must_register_metric(

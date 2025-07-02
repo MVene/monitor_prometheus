@@ -39,15 +39,16 @@ double get_memory_usage()
 
     // Calcular el porcentaje de uso de memoria
     unsigned long long used_mem = total_mem - free_mem;
-    unsigned long long mem_usage_percent = used_mem / total_mem * (unsigned long long)100.0;
+    double mem_usage_percent = ((double)used_mem / (double)total_mem) * 100.0;
 
-    return (double)mem_usage_percent;
+    return mem_usage_percent;
 }
 
 double get_cpu_usage()
 {
     static unsigned long long prev_user = 0, prev_nice = 0, prev_system = 0, prev_idle = 0, prev_iowait = 0,
                               prev_irq = 0, prev_softirq = 0, prev_steal = 0;
+    static int first_call = 1;
     unsigned long long user, nice, system, idle, iowait, irq, softirq, steal;
     unsigned long long totald, idled;
     double cpu_usage_percent;
@@ -76,6 +77,21 @@ double get_cpu_usage()
     {
         fprintf(stderr, "Error al parsear /proc/stat\n");
         return -1.0;
+    }
+
+    // En la primera llamada, inicializar los valores previos y retornar 0.0
+    if (first_call)
+    {
+        prev_user = user;
+        prev_nice = nice;
+        prev_system = system;
+        prev_idle = idle;
+        prev_iowait = iowait;
+        prev_irq = irq;
+        prev_softirq = softirq;
+        prev_steal = steal;
+        first_call = 0;
+        return 0.0;
     }
 
     // Calcular las diferencias entre las lecturas actuales y anteriores
@@ -128,13 +144,12 @@ struct DiskStats get_disk_io()
     if (fp == NULL)
     {
         perror("Error al abrir /proc/diskstats");
-        // exit(EXIT_FAILURE);
     }
 
     // Leer los valores de lecturas y escrituras
     while (fgets(buffer, sizeof(buffer), fp) != NULL)
     {
-        if (sscanf(buffer, "%*u %*u nvme0n1p5 %*u %*u %llu %llu %*u %*u %llu %llu", &read_sectors, &read_time,
+        if (sscanf(buffer, "%*u %*u nvme0n1p6 %*u %*u %llu %llu %*u %*u %llu %llu", &read_sectors, &read_time,
                    &write_sectors, &write_time) == 4)
         {
             break;
@@ -143,8 +158,8 @@ struct DiskStats get_disk_io()
 
     disk.reads = read_sectors;
     disk.writes = write_sectors;
-    disk.read_time = read_time * (unsigned long long)(1e-3);
-    disk.write_time = write_time * (unsigned long long)(1e-3);
+    disk.read_time = read_time;
+    disk.write_time = write_time;
 
     fclose(fp);
 
